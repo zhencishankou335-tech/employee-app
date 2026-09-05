@@ -1,0 +1,966 @@
+@charset "UTF-8";
+/* ==========================================================================
+   社員名簿 － 画面スタイル（1ファイル完結・外部フォント読み込みなし）
+   想定：日本企業の社内業務システム。装飾より「読み取りやすさ」と「密度」を優先。
+   ライト固定（ダークモード非対応）。WCAG 2.1 AA を満たすコントラストで設計。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. デザイントークン
+   ここに値を集約しておくと、色を1か所変えるだけで画面全体の印象を調整できる。
+   -------------------------------------------------------------------------- */
+:root {
+
+  /* --- 面（背景）の色 ------------------------------------------------------
+     業務画面は「紙に印刷した帳票」に近い見え方が読みやすい。
+     背景をわずかに灰色に落とし、表やパネルの白を浮かせて領域を区切る。 */
+  --c-bg:            #f4f6f8; /* ページ全体の地。真っ白にしないことで表の白が際立つ */
+  --c-surface:       #ffffff; /* 表・パネルなど、情報が載る面 */
+  --c-surface-sub:   #eef1f5; /* 表ヘッダなど、面より一段沈める場所 */
+  --c-zebra:         #fafbfc; /* 偶数行のゼブラ。行を追う目印になる最小限の差 */
+  --c-row-hover:     #e9f0f8; /* マウスが乗っている行。青系にして操作対象と分かるように */
+
+  /* --- 線の色 --------------------------------------------------------------
+     業務系の表は罫線があった方が桁を追いやすい。ただし濃すぎると紙面が汚れる。
+     外枠 ＞ 行の区切り ＞ セルの縦罫 の順に薄くして、視線が横に流れるようにする。 */
+  --c-border:        #c9cfd6; /* 外枠・入力欄の枠 */
+  --c-border-soft:   #e3e7ec; /* 行の区切り */
+  --c-border-faint:  #edf0f3; /* セルの縦罫 */
+
+  /* --- 文字の色 ------------------------------------------------------------
+     #23282e ／白 ＝ 約 13.9:1、#5c636b ／白 ＝ 約 6.1:1。いずれも AA（4.5:1）を満たす。 */
+  --c-text:          #23282e; /* 本文・表の値 */
+  --c-text-weak:     #5c636b; /* 補足・件数・ヒント */
+  --c-text-invert:   #ffffff; /* 濃い面の上に載せる文字 */
+
+  /* --- アクセント（青1色）--------------------------------------------------
+     使うのは「主ボタン」「フォーカス」「リンク」だけ。色数を増やすと業務画面は散らかる。
+     #14538c ／白 ＝ 約 7.9:1 で AA を満たす。 */
+  --c-accent:        #14538c;
+  --c-accent-dark:   #0f4172; /* hover / active。押した実感を色の濃さだけで出す */
+  --c-accent-weak:   #e3edf7; /* 帯・バッジの下地 */
+
+  /* --- ヘッダ帯 ------------------------------------------------------------
+     濃いグレーの帯は日本の社内システムで見慣れた形。白文字で約 11:1 を確保。 */
+  --c-header-bg:     #333d4a;
+
+  /* --- 状態色（彩度は低め。信号機のような原色は業務画面では騒がしい）------- */
+  --c-ok-bg:         #e8f3ea;  /* 完了メッセージの下地 */
+  --c-ok-border:     #a9cdb2;
+  --c-ok-text:       #1d5c2c;  /* 下地に対して約 6.9:1 */
+
+  --c-warn-bg:       #f7efdf;  /* 休職バッジ（黄土色）の下地 */
+  --c-warn-border:   #d9c49b;
+  --c-warn-text:     #7a4b06;  /* 下地に対して約 6.5:1 */
+
+  --c-err-bg:        #fdecec;  /* エラー帯の下地 */
+  --c-err-border:    #dfb3b3;
+  --c-err-text:      #9c1d1d;  /* 白に対して約 8.1:1 */
+
+  --c-mute-bg:       #eceef0;  /* 退職バッジ（グレー）の下地 */
+  --c-mute-border:   #ccd1d6;
+  --c-mute-text:     #4a5158;  /* 下地に対して約 6.9:1 */
+
+  /* --- 余白 ----------------------------------------------------------------
+     4px を1単位にした階段。感覚で 5px や 7px を混ぜないための基準。
+     業務一覧は情報量が主役なので、上限を 24px までに抑えて詰めて使う。 */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+
+  /* --- 文字サイズ ----------------------------------------------------------
+     本文 14px、表 13px。業務システムは1画面に多く載せるため、Web標準の 16px より小さめ。
+     ただし補足でも 12px 未満にはしない（読み取り精度が落ちるため）。 */
+  --fz-lg:   16px; /* 画面見出し */
+  --fz-base: 14px; /* 本文・入力欄 */
+  --fz-sm:   13px; /* 表の中身 */
+  --fz-xs:   12px; /* ヒント・件数・バッジ */
+
+  /* --- 角丸 ----------------------------------------------------------------
+     2px。ほぼ直角。丸みが強いと消費者向けサービスの見た目に寄ってしまう。 */
+  --radius: 2px;
+
+  /* --- レイアウト幅 --------------------------------------------------------- */
+  --w-page:   1280px; /* 一覧の最大幅。広すぎると視線の横移動が大きくなる */
+  --w-form:    640px; /* 入力フォームの最大幅。1行が長くなりすぎないように制限 */
+  --h-header:    44px; /* ヘッダ帯の高さ。表ヘッダを固定する位置の計算に使う */
+
+  /* --- 部品の高さ ----------------------------------------------------------
+     入力欄とボタンを同じ 30px に揃えると、検索条件の横並びが自然に一直線になる。 */
+  --h-control: 30px;
+
+  /* --- フォント ------------------------------------------------------------
+     日本語 Windows で確実に出る順に並べ、最後に総称名でフォールバック。
+     外部フォントは読み込まない（オフラインでも見た目が壊れないこと）。 */
+  --ff-base: system-ui, "Segoe UI", "Yu Gothic UI", "Yu Gothic", "Meiryo UI",
+             Meiryo, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  --ff-num:  Consolas, "SF Mono", Menlo, "MS Gothic", monospace;
+}
+
+/* --------------------------------------------------------------------------
+   2. ベース
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html {
+  /* ページ自体は横スクロールさせない。横に溢れるのは表の中だけに閉じ込める */
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--ff-base);
+  font-size: var(--fz-base);
+  line-height: 1.6;
+  /* 数字の幅を揃える。社員番号・日付・件数が縦にきれいに並ぶ */
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--c-accent); }
+
+/* キーボード操作の現在地。業務系は Tab 移動が多いので、必ずはっきり出す。
+   outline だけだと濃い面の上で埋もれるため、白の外側リングを重ねて二重にする。 */
+:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 1px;
+  box-shadow: 0 0 0 1px #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   3. アプリケーションヘッダ（.app-header / .app-title / .app-nav）
+   -------------------------------------------------------------------------- */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  height: var(--h-header);
+  padding: 0 var(--sp-4);
+  background: var(--c-header-bg);
+  color: var(--c-text-invert);
+  /* スクロールしても常に見えるように固定。表ヘッダもこの高さの下に固定する */
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.app-title {
+  font-size: var(--fz-lg);
+  font-weight: 600;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+.app-nav {
+  display: flex;
+  gap: var(--sp-3);
+}
+
+.app-nav a {
+  color: var(--c-text-invert);
+  text-decoration: none;
+  font-size: var(--fz-sm);
+  padding: 2px var(--sp-2);
+  border-radius: var(--radius);
+}
+
+.app-nav a:hover { background: rgba(255, 255, 255, .14); }
+
+.app-nav a:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 1px;
+  box-shadow: none; /* 濃い帯の上では白い線だけで十分に見える */
+}
+
+/* --------------------------------------------------------------------------
+   4. 本体レイアウト（.app-main / .page-head / .page-title）
+   -------------------------------------------------------------------------- */
+.app-main {
+  max-width: var(--w-page);
+  margin: 0 auto;
+  padding: var(--sp-4) var(--sp-4) var(--sp-5);
+}
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* 左に見出し、右に主要操作（新規登録） */
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-3);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.page-title {
+  margin: 0;
+  font-size: var(--fz-lg);
+  font-weight: 600;
+  line-height: 1.3;
+  /* 見出しの左に細い青線。装飾ではなく「ここが画面の題名」という位置の目印 */
+  padding-left: var(--sp-2);
+  border-left: 3px solid var(--c-accent);
+}
+
+/* --------------------------------------------------------------------------
+   5. 完了メッセージ（.flash）
+   処理が通ったことだけを伝える控えめな緑帯。目立たせすぎない。
+   -------------------------------------------------------------------------- */
+.flash {
+  margin: 0 0 var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--c-ok-bg);
+  border: 1px solid var(--c-ok-border);
+  border-left: 3px solid var(--c-ok-text); /* 左だけ濃くして種類を示す */
+  border-radius: var(--radius);
+  color: var(--c-ok-text);
+  font-size: var(--fz-sm);
+}
+
+/* --------------------------------------------------------------------------
+   6. 入力エラーの見出し（.error-summary）
+   -------------------------------------------------------------------------- */
+.error-summary {
+  max-width: var(--w-form); /* フォーム本体と同じ幅に揃える */
+  margin: 0 0 var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--c-err-bg);
+  border: 1px solid var(--c-err-border);
+  border-left: 3px solid var(--c-err-text);
+  border-radius: var(--radius);
+  color: var(--c-err-text);
+  font-size: var(--fz-sm);
+}
+
+.error-summary p {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   7. 検索条件パネル（.search-panel / .field / .search-actions）
+   条件は縦に積まず、1行に詰めて置く。折り返しは flex-wrap に任せる。
+   -------------------------------------------------------------------------- */
+.search-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;   /* ラベルの行数が違っても入力欄の下端が揃う */
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+}
+
+/* .field は検索パネルと入力フォームの両方で使われる共通の「1項目」 */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0; /* flex の中で入力欄が親を押し広げないための保険 */
+}
+
+.field label {
+  font-size: var(--fz-xs);
+  font-weight: 600;
+  color: var(--c-text-weak);
+  line-height: 1.4;
+}
+
+/* 検索条件の各欄は、入る文字数に応じて幅を決め打ちする（横に並べるため） */
+.search-panel .field input[type="text"] { width: 260px; }
+.search-panel .field select { width: 160px; }
+
+/* 検索ボタン群。中に <form> やリンクが混ざっても縦に積ませない */
+.search-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-left: auto; /* 条件欄が少ないときはボタンを右端に寄せる */
+}
+
+.search-actions form { display: contents; }
+
+/* --------------------------------------------------------------------------
+   8. 件数表示（.result-count）
+   -------------------------------------------------------------------------- */
+.result-count {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fz-xs);
+  color: var(--c-text-weak);
+}
+
+.result-count span {
+  font-family: var(--ff-num);
+  font-weight: 600;
+  color: var(--c-text); /* 数字だけ濃くして拾い読みできるように */
+}
+
+/* --------------------------------------------------------------------------
+   9. 一覧表（.data-table）－ この画面の主役
+   border-collapse は separate にしている。collapse だとヘッダ固定時に罫線が消えるため。
+   -------------------------------------------------------------------------- */
+.data-table {
+  width: 100%;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fz-sm);
+}
+
+.data-table thead th {
+  position: sticky;          /* 縦に長い一覧でも列名を見失わない */
+  top: var(--h-header);      /* アプリヘッダの真下に貼り付く */
+  z-index: 10;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--c-surface-sub);
+  color: var(--c-text);
+  font-size: var(--fz-xs);
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 2px solid var(--c-border); /* 見出しと明細の境目は太めに */
+  border-right: 1px solid var(--c-border-faint);
+}
+
+.data-table thead th:last-child {
+  border-right: 0;
+  /* 操作列は中身の分だけあればよい。1% にすると内容幅まで縮み、
+     余った幅が氏名やメールアドレスなど可変長の列に回る（帳票らしく間延びしない） */
+  width: 1%;
+}
+
+.data-table tbody td {
+  padding: 5px var(--sp-3); /* 行高を詰める。1画面に多く収まることが業務では価値になる */
+  border-bottom: 1px solid var(--c-border-soft);
+  border-right: 1px solid var(--c-border-faint);
+  vertical-align: middle;
+  line-height: 1.5;
+}
+
+.data-table tbody td:last-child { border-right: 0; }
+.data-table tbody tr:last-child td { border-bottom: 0; }
+
+/* ゼブラ。差は最小限でよい（強いと罫線とぶつかって紙面が濁る） */
+.data-table tbody tr:nth-child(even) td { background: var(--c-zebra); }
+
+/* 行のハイライト。どの行を見ているか＝どの行を操作するかの確認になる */
+.data-table tbody tr:hover td { background: var(--c-row-hover); }
+
+/* 社員番号（1列目）と入社日（6列目）は等幅にして桁を揃える。
+   HTML を変更しない前提のため列番号で指定している。列順を変えたらここも直すこと。 */
+.data-table tbody td:nth-child(1),
+.data-table tbody td:nth-child(6) {
+  font-family: var(--ff-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .01em;
+  white-space: nowrap;
+}
+
+/* メールアドレスは長い。折り返さず、溢れたら表の中を横スクロールさせる */
+.data-table tbody td:nth-child(5) { white-space: nowrap; }
+
+/* 該当0件のとき。ゼブラより優先させるため、行の背景指定より後ろに置く */
+.data-table .empty {
+  padding: var(--sp-5) var(--sp-3);
+  background: var(--c-surface);
+  color: var(--c-text-weak);
+  text-align: center;
+}
+
+/* 操作列。中に <form> が2つ入るため、そのままだとボタンが縦に積まれる。
+   td 自体を flex にすると罫線と行高が崩れるので、中身だけ inline-block にして横並びにする。 */
+.row-actions { white-space: nowrap; }
+
+.row-actions > a,
+.row-actions > form {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0;
+}
+
+.row-actions > * + * { margin-left: var(--sp-1); }
+
+/* --------------------------------------------------------------------------
+   10. 在籍区分バッジ（.status-badge）
+   面積が小さいので、色だけに頼らず文字も必ず読ませる。下地＋細枠で低彩度に表現。
+   -------------------------------------------------------------------------- */
+.status-badge {
+  display: inline-block;
+  min-width: 44px;         /* 「在籍」「休職」「退職」で幅が揃い、列が乱れない */
+  padding: 1px var(--sp-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-size: var(--fz-xs);
+  line-height: 1.6;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* 在籍：落ち着いた青。通常状態なので最も静かに */
+.status-active {
+  background: var(--c-accent-weak);
+  border-color: #b6cde5;
+  color: var(--c-accent);
+}
+
+/* 休職：黄土色。「一時的に外れている」ことを注意色で示す */
+.status-leave {
+  background: var(--c-warn-bg);
+  border-color: var(--c-warn-border);
+  color: var(--c-warn-text);
+}
+
+/* 退職：グレー。役割が終わった行であることを彩度なしで示す */
+.status-retired {
+  background: var(--c-mute-bg);
+  border-color: var(--c-mute-border);
+  color: var(--c-mute-text);
+}
+
+/* --------------------------------------------------------------------------
+   11. ページ送り（.pagination）
+   -------------------------------------------------------------------------- */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  font-size: var(--fz-sm);
+}
+
+.pagination a {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 var(--sp-3);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  color: var(--c-accent);
+  text-decoration: none;
+}
+
+.pagination a:hover {
+  background: var(--c-accent-weak);
+  border-color: #b6cde5;
+}
+
+.pagination span {
+  padding: 0 var(--sp-1);
+  color: var(--c-text-weak);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   12. 入力フォーム（.entry-form）
+   1項目1行の縦積み。ただし幅は広げない（1行が長いと入力ミスに気づきにくい）。
+   -------------------------------------------------------------------------- */
+.entry-form {
+  max-width: var(--w-form);
+  padding: var(--sp-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+}
+
+.entry-form .field { margin-bottom: var(--sp-4); }
+
+.entry-form .field label {
+  font-size: var(--fz-sm);
+  color: var(--c-text); /* フォームのラベルは本文と同じ濃さにして読み落としを防ぐ */
+}
+
+/* 必須マーク。赤の面積を最小にして、赤字のエラー文と見分けがつくようにする */
+.required {
+  display: inline-block;
+  margin-left: var(--sp-1);
+  padding: 0 5px;
+  background: var(--c-err-bg);
+  border: 1px solid var(--c-err-border);
+  border-radius: var(--radius);
+  color: var(--c-err-text);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  vertical-align: 1px;
+}
+
+/* --- 入力部品の共通スタイル ------------------------------------------------ */
+input[type="text"],
+input[type="date"],
+input[type="email"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  height: var(--h-control);
+  padding: 0 var(--sp-2);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  color: var(--c-text);
+  font-family: inherit;
+  font-size: var(--fz-base);
+  line-height: normal;
+}
+
+/* 日付・数値は入力中も桁が揃って見えるように */
+input[type="date"],
+input[type="number"] { font-variant-numeric: tabular-nums; }
+
+textarea {
+  height: auto;
+  padding: var(--sp-2);
+  line-height: 1.6;
+  resize: vertical; /* 横に伸ばされるとレイアウトが崩れるので縦だけ許可 */
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #767c83; /* 白地に約 4.7:1。入力済みの値（13.9:1）と明確に差をつける */
+}
+
+input:focus,
+select:focus,
+textarea:focus { border-color: var(--c-accent); }
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 0;
+  box-shadow: none; /* 枠が二重に見えないよう、入力欄では白リングを外す */
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background: #f2f4f6;
+  color: var(--c-text-weak);
+}
+
+/* 補足文と項目ごとのエラー。
+   .field 側の gap（4px）で間隔が付くので、ここでは margin を持たせない
+   （両方効かせると入力欄と説明文が離れ、どの項目の説明か分かりにくくなる） */
+.hint {
+  margin: 0;
+  font-size: var(--fz-xs);
+  color: var(--c-text-weak);
+}
+
+.error {
+  margin: 0;
+  font-size: var(--fz-xs);
+  font-weight: 600;
+  color: var(--c-err-text);
+}
+
+/* エラーは色だけでなく記号でも示す（色が判別しにくい人にも伝わるように） */
+.error::before { content: "※ "; }
+
+.form-actions {
+  display: flex;
+  gap: var(--sp-2);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--c-border-soft);
+}
+
+/* --------------------------------------------------------------------------
+   13. ボタン（.btn / .btn-primary / .btn-small / .btn-danger）
+   <a> と <button> の両方に同じクラスが付くため、見た目を揃える指定を明示する。
+   -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--h-control);
+  padding: 0 var(--sp-3);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  color: var(--c-text);
+  font-family: inherit;
+  font-size: var(--fz-sm);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  /* 影も浮き上がりもかけない。押した感じは色の濃さだけで出す（帳票的な見え方を保つ） */
+  transition: background-color .1s linear, border-color .1s linear;
+}
+
+.btn:hover  { background: #eef1f5; }
+.btn:active { background: #e3e7ec; }
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+/* 主操作。1画面につき色を持つボタンは原則1つ。次にやることを迷わせない */
+.btn-primary {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+  color: var(--c-text-invert);
+  font-weight: 600;
+}
+
+.btn-primary:hover,
+.btn-primary:active {
+  background: var(--c-accent-dark);
+  border-color: var(--c-accent-dark);
+}
+
+/* 表の行内で使う小さいボタン。行高を上げないことが目的 */
+.btn-small {
+  height: 22px;
+  padding: 0 var(--sp-2);
+  font-size: var(--fz-xs);
+}
+
+/* 削除。赤で塗りつぶすと一覧が赤だらけになるので、通常は白地＋赤文字。
+   マウスを乗せたときだけ赤く塗り、押す直前に危険な操作だと伝える。 */
+.btn-danger {
+  border-color: var(--c-err-border);
+  color: var(--c-err-text);
+}
+
+.btn-danger:hover,
+.btn-danger:active {
+  background: var(--c-err-text);
+  border-color: var(--c-err-text);
+  color: var(--c-text-invert);
+}
+
+/* --------------------------------------------------------------------------
+   14. 画面が狭いとき
+   表は列が多い。文字を縮めて読めなくするより、表の中だけを横スクロールさせる。
+   （display:block により <table> 自体がスクロール枠になる。ページ全体は動かない）
+   -------------------------------------------------------------------------- */
+@media (max-width: 1100px) {
+  .data-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* スクロール枠の中では画面上端への固定が効かないため、ヘッダ固定は解除する */
+  .data-table thead th { position: static; }
+}
+
+@media (max-width: 720px) {
+  .app-main { padding: var(--sp-3) var(--sp-2) var(--sp-4); }
+
+  /* 検索条件は横並びを保ちつつ、入力欄を画面幅に合わせて伸縮させる */
+  .search-panel .field { flex: 1 1 200px; }
+  .search-panel .field input[type="text"],
+  .search-panel .field select { width: 100%; }
+  .search-actions { margin-left: 0; }
+
+  .entry-form { padding: var(--sp-3); }
+}
+
+/* --------------------------------------------------------------------------
+   15. 集計表（.summary-table）
+   一覧表（9章 .data-table）と同じ骨格をそのまま使い、集計表に要る差分だけを足す。
+   題材に依存する指定は入れない。「部署」「社員」ではなく
+   「行見出し・数値・構成比」という役割で当てているので、書籍管理などにも移せる。
+
+   9章は「明細を縦に読む表」として書かれているため、集計表では次の3点が足りない。
+     ・1列目が td ではなく th（scope="row"）なので、余白も罫線もゼブラも当たっていない
+     ・tfoot が存在しない前提なので、合計行が明細と同じ顔になる
+     ・最終列を「操作列」とみなして内容幅まで縮める指定が入っている
+   ここではその3点を補うだけで、9章の指定は書き換えない。
+   -------------------------------------------------------------------------- */
+
+/* 集計表は列が少なく、行も部署の数しかない。一覧と同じ 1280px まで広げると
+   数字と数字の間が離れ、1行読むのに視線を横へ往復させることになる。
+   読み取れる幅で止める（--w-form 640px より広く、--w-page 1280px よりずっと狭い）。 */
+.summary-table,
+.table-note {
+  max-width: 720px;
+}
+
+/* 9章の「最終列＝操作列だから内容幅まで縮める（width:1%）」を、集計表では解除する。
+   集計表の最終列は構成比で、ここが縮むと棒が潰れて比較できなくなる。
+   .data-table.summary-table と重ねて詳細度を上げ、記述順に頼らないようにしている。 */
+.data-table.summary-table thead th:last-child {
+  width: auto;
+}
+
+/* --------------------------------------------------------------------------
+   15-1. 行見出し（.data-table th[scope="row"]）
+   1列目を th + scope="row" にしておくと、読み上げのときに
+   「営業部 の 在籍 12」と行と列の見出しが対で読まれる。見た目もそれに合わせる。
+   9章のセル指定は td にしか当たらないので、余白・罫線・背景をここで揃える。
+   -------------------------------------------------------------------------- */
+.data-table tbody th[scope="row"] {
+  padding: 5px var(--sp-3);       /* 9章の td と同じ行高。1列目だけ高くしない */
+  border-bottom: 1px solid var(--c-border-soft);
+  border-right: 1px solid var(--c-border-faint);
+  color: var(--c-text);
+  font-weight: 600;               /* 数値より一段だけ強く。行の起点だと分かれば十分 */
+  text-align: left;               /* th の既定は中央。表では左端に揃う方が拾いやすい */
+  vertical-align: middle;
+  line-height: 1.5;
+}
+
+.data-table tbody tr:last-child th[scope="row"] { border-bottom: 0; }
+
+/* ゼブラと hover は 9章で td にしか当てていない。行見出しにも同じ背景を渡す。
+   ここを省くと1列目だけ白く残り、行が途中で切れて見える。 */
+.data-table tbody tr:nth-child(even) th[scope="row"] { background: var(--c-zebra); }
+.data-table tbody tr:hover th[scope="row"] { background: var(--c-row-hover); }
+
+/* --------------------------------------------------------------------------
+   15-2. 数値セル（.num）
+   桁が縦に揃わない集計表は読めない。右寄せ・等幅・tabular-nums の3点で揃える。
+   -------------------------------------------------------------------------- */
+
+/* 見出し（thead）も含めて右へ。列名の右端と数字の右端が一直線になる */
+.data-table .num { text-align: right; }
+
+.data-table tbody .num,
+.data-table tfoot .num {
+  font-family: var(--ff-num);
+  font-variant-numeric: tabular-nums; /* 1 と 8 で幅が変わらない＝列がぶれない */
+  letter-spacing: .01em;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   15-3. 合計行（tfoot）
+   明細と同じ顔のまま最下段に置くと、合計が「もう1つの部署」に見える。
+   締めだと分かるように3つ重ねる。
+     ① 上に 2px の罫線 …… thead の下罫線と同じ太さ。表の上下が対になり、
+        明細がこの2本に挟まれた範囲だと読める
+     ② 面を一段沈める …… thead と同じ --c-surface-sub。ここも thead と対
+     ③ 文字を 600、行高を +3px …… 色が出ない環境でも太さと高さで区別できる
+   ゼブラ（9章）と hover は tbody 配下にしか当たらないので、tfoot は元から
+   影響を受けない。それでも背景をここで明示しておけば、明細の行数が偶数でも奇数でも、
+   将来 9章のゼブラ指定が tbody の外へ広がっても、合計行の見え方は変わらない。
+
+   なお .data-table は border-collapse: separate（9章）なので、tr に border を
+   書いても描画されない。罫線はセル（th / td）側に指定すること。
+   -------------------------------------------------------------------------- */
+.data-table tfoot > tr > th,
+.data-table tfoot > tr > td {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--c-surface-sub);
+  border-top: 2px solid var(--c-border);
+  border-right: 1px solid var(--c-border-faint);
+  color: var(--c-text);
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.data-table tfoot > tr > th { text-align: left; }
+.data-table tfoot > tr > :last-child { border-right: 0; }
+
+/* --------------------------------------------------------------------------
+   15-4. 構成比（.ratio-cell / .ratio-bar / .ratio-value）
+   棒の幅はインライン style（width:NN%）で HTML 側から入る。CSS では幅を書かない。
+
+   flex ではなく grid にしている理由：flex で横に並べると、棒の % が
+   セル全体の幅を基準にしてしまい、100% の行で右の数値が押し出される。
+   grid なら % は1列目（＝溝）の幅に対する割合になるので、棒が伸びても数値は動かない。
+   -------------------------------------------------------------------------- */
+
+/* .data-table.summary-table と重ねているのは、9章の
+   「.data-table tbody td:nth-child(6)」（一覧の入社日を等幅にする指定）が
+   集計表では6列目＝この構成比セルに当たってしまうため。詳細度で上回って打ち消す。 */
+.data-table.summary-table .ratio-cell {
+  display: grid;
+  grid-template-columns: 1fr auto;  /* 左＝棒の溝（可変）／右＝数値（内容幅） */
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 180px;                 /* 棒が読める長さの下限。列幅の下限にもなる */
+  letter-spacing: normal;           /* 9章の nth-child 指定の字送りを戻す */
+}
+
+/* 棒の溝。100% の位置が見えるので、「短い棒」なのか「まだ描かれていない」のかを
+   取り違えずに済む。棒と同じマス（1行1列目）に敷き、その上に棒を重ねる。 */
+.data-table.summary-table .ratio-cell::before {
+  content: "";
+  grid-area: 1 / 1;
+  align-self: center;
+  height: 8px;
+  background: var(--c-border-soft);
+  border-radius: var(--radius);
+}
+
+/* 棒そのもの。
+   ・幅は書かない（HTML の style="width:NN%" が決める）
+   ・0%（0名の部署）でも消えないよう min-width: 2px を持たせる。
+     width より min-width が優先されるので、インライン style の 0% でも 2px 残る。
+     完全に消すと「描画に失敗した空欄」に見えてしまう。
+   ・max-width: 100% で、丸めなどで 100% を超える値が来ても溝からはみ出さない
+   ・色は情報を担っていない。割合は必ず隣の .ratio-value が数字で示す（色覚に依存しない） */
+.data-table.summary-table .ratio-bar {
+  grid-area: 1 / 1;
+  align-self: center;
+  justify-self: start;
+  height: 8px;
+  min-width: 2px;
+  max-width: 100%;
+  background: var(--c-accent);
+  border-radius: var(--radius);
+}
+
+/* パーセント値。等幅＋4文字分の下限幅で、"5%" でも "100%" でも同じ幅を占める。
+   行が変わっても % の位置がぶれないので、縦に読み下せる。 */
+.data-table.summary-table .ratio-value {
+  grid-area: 1 / 2;
+  min-width: 4ch;                   /* "100%" の4文字ぶん。等幅なので全行同じ幅になる */
+  font-family: var(--ff-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fz-xs);
+  color: var(--c-text);             /* 割合の実体はこの数字。薄くしない */
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   15-5. 表の下の補足文（.table-note）
+   件数表示（.result-count）と同じ扱い。表と同じ幅で折り返し、表の一部として読ませる。
+   -------------------------------------------------------------------------- */
+.table-note {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fz-xs);
+  color: var(--c-text-weak);
+}
+
+/* --------------------------------------------------------------------------
+   15-6. 集計表の印刷（16章に対する差分）
+   16章は一覧表を紙に落とすために書かれていて、そのままでは集計表が崩れる。
+   16章は触らず、セレクタを .data-table.summary-table と重ねて詳細度で上回ることで
+   打ち消している（このブロックが 16章より前にあっても効く）。
+   -------------------------------------------------------------------------- */
+@media print {
+
+  /* 16章は「最終列＝操作列」とみなして thead の最終列を消す。
+     集計表の最終列は構成比なので、消すと見出しだけ1列ずれて表が読めなくなる。ここで戻す。 */
+  .data-table.summary-table thead th:last-child {
+    display: table-cell !important;
+  }
+
+  /* 紙では画面用の幅制限は不要。紙幅に合わせて組む */
+  .data-table.summary-table { max-width: none; }
+
+  /* 行見出し。16章は td にしか罫線を引いていないので、ここで揃える。
+     ゼブラの背景はインクの無駄なので落とす（16章の td と同じ扱い） */
+  .data-table.summary-table tbody th[scope="row"] {
+    background: transparent !important;
+    border-bottom: 1px solid #999999;
+  }
+
+  /* 合計行。背景色は既定では印刷されないため、16章の thead と同じく exact で残す。
+     色が出ないプリンタでも、2px の罫線と太字だけで合計行だと分かる。 */
+  .data-table.summary-table tfoot > tr > th,
+  .data-table.summary-table tfoot > tr > td {
+    background: #eeeeee !important;
+    border-top: 2px solid #666666;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 棒は背景色なので、何もしないと紙で真っ白になって消える。
+     溝は「線」に置き換える（線は背景色の印刷設定に左右されない）。
+     棒は濃いグレーの塗りにし、印刷指定で色を残す。
+     万一プリンタが背景の印刷を拒んでも、隣の数値が残るので情報は失われない。 */
+  .data-table.summary-table .ratio-cell::before {
+    background: transparent !important;
+    border: 1px solid #999999;
+  }
+
+  .data-table.summary-table .ratio-bar {
+    background: #444444 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 合計行だけが次ページの頭に取り残されないように */
+  .data-table.summary-table tfoot {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   16. 印刷
+   一覧をそのまま配布資料にできること。画面用の色帯と操作系は落とす。
+   -------------------------------------------------------------------------- */
+@media print {
+  body {
+    background: #ffffff;
+    font-size: 10pt;
+  }
+
+  /* 操作するためのものは紙の上では意味がないので消す */
+  .app-header,
+  .app-nav,
+  .search-panel,
+  .search-actions,
+  .pagination,
+  .form-actions,
+  .btn {
+    display: none !important;
+  }
+
+  /* 操作列は見出しごと落とす（列がずれないよう th と td の両方を消す） */
+  .data-table thead th:last-child,
+  .data-table tbody .row-actions {
+    display: none !important;
+  }
+
+  .app-main {
+    max-width: none;
+    padding: 0;
+  }
+
+  .data-table {
+    display: table;   /* 画面用の横スクロール指定を打ち消す */
+    width: 100%;
+    border: 1px solid #666666;
+    font-size: 9pt;
+    white-space: normal;
+  }
+
+  .data-table thead th {
+    position: static;
+    background: #eeeeee !important;
+    border-bottom: 1px solid #666666;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .data-table tbody td { border-bottom: 1px solid #999999; }
+
+  /* ゼブラは紙ではインクを食うだけなので消す */
+  .data-table tbody tr:nth-child(even) td { background: transparent; }
+
+  /* 行が紙の境目で分断されないように */
+  .data-table tbody tr { page-break-inside: avoid; }
+
+  /* 各ページの先頭に列名を繰り返す */
+  .data-table thead { display: table-header-group; }
+
+  .status-badge {
+    background: transparent !important;
+    border: 1px solid #999999;
+    color: #000000;
+  }
+}

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>部署別人数 | 社員名簿</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+
+<header class="app-header">
+  <span class="app-title">社員名簿</span>
+  <nav class="app-nav">
+    <a th:href="@{/employees}">社員一覧</a>
+    <a th:href="@{/employees/summary}">部署別人数</a>
+  </nav>
+</header>
+
+<main class="app-main">
+
+  <div class="page-head">
+    <h1 class="page-title">部署別人数</h1>
+    <a class="btn" th:href="@{/employees}">社員一覧へ</a>
+  </div>
+
+  <p class="result-count">
+    全 <span th:text="${grandTotal}">0</span> 名
+  </p>
+
+  <table class="data-table summary-table">
+    <thead>
+    <tr>
+      <th scope="col">部署</th>
+      <th scope="col" class="num">在籍</th>
+      <th scope="col" class="num">休職</th>
+      <th scope="col" class="num">退職</th>
+      <th scope="col" class="num">合計</th>
+      <th scope="col">構成比</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="s : ${summaries}">
+      <th scope="row" th:text="${s.department.label}">営業部</th>
+      <td class="num" th:text="${s.active}">0</td>
+      <td class="num" th:text="${s.leave}">0</td>
+      <td class="num" th:text="${s.retired}">0</td>
+      <td class="num" th:text="${s.total}">0</td>
+      <td class="ratio-cell">
+        <span class="ratio-bar" th:style="'width:' + ${s.ratio(grandTotal)} + '%'"></span>
+        <span class="ratio-value" th:text="${s.ratio(grandTotal)} + '%'">0%</span>
+      </td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+      <th scope="row">合計</th>
+      <td class="num" th:text="${totalActive}">0</td>
+      <td class="num" th:text="${totalLeave}">0</td>
+      <td class="num" th:text="${totalRetired}">0</td>
+      <td class="num" th:text="${grandTotal}">0</td>
+      <td></td>
+    </tr>
+    </tfoot>
+  </table>
+
+  <p class="table-note">
+    社員が1人もいない部署も、0名として並べています。
+  </p>
+
+</main>
+
+</body>
+</html>

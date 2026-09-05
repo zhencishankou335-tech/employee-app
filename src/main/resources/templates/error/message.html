@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${errorTitle} + ' | 社員名簿'">エラー | 社員名簿</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+
+<header class="app-header">
+  <span class="app-title">社員名簿</span>
+  <nav class="app-nav">
+    <a th:href="@{/employees}">社員一覧</a>
+    <a th:href="@{/employees/summary}">部署別人数</a>
+  </nav>
+</header>
+
+<main class="app-main">
+
+  <div class="page-head">
+    <h1 class="page-title" th:text="${errorTitle}">データが見つかりません</h1>
+  </div>
+
+  <div class="error-summary">
+    <p th:text="${errorDetail}">対象のデータがありません</p>
+  </div>
+
+  <p>URLが間違っているか、他の担当者が既に削除した可能性があります。</p>
+
+  <div class="form-actions">
+    <a class="btn btn-primary" th:href="@{/employees}">社員一覧に戻る</a>
+  </div>
+
+</main>
+
+</body>
+</html>
