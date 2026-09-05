@@ -52,7 +52,7 @@ class LoginPageTest {
     @DisplayName("devプロファイルでなければ、開発用のID・パスワードを画面に出さない")
     void devCredentialsAreHiddenByDefault() throws Exception {
         mockMvc.perform(get("/login"))
-                .andExpect(content().string(not(containsString("admin12345"))))
-                .andExpect(content().string(not(containsString("viewer12345"))));
+                .andExpect(content().string(not(containsString("meibo-admin-2026!"))))
+                .andExpect(content().string(not(containsString("meibo-viewer-2026!"))));
     }
 }

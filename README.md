@@ -18,8 +18,8 @@ mvnw.cmd spring-boot:run        # Windows
 
 | ログインID | パスワード | 権限 | できること |
 |---|---|---|---|
-| `admin` | `admin12345` | 管理者 | すべて |
-| `viewer` | `viewer12345` | 閲覧のみ | 一覧・検索・集計・CSV出力 |
+| `admin` | `meibo-admin-2026!` | 管理者 | すべて |
+| `viewer` | `meibo-viewer-2026!` | 閲覧のみ | 一覧・検索・集計・CSV出力 |
 
 **この2つのアカウントは開発（dev）プロファイルのときだけ作られる。** 本番では作られない。
 ログイン画面にこの情報が出るのも dev のときだけ（後述）。
@@ -118,7 +118,8 @@ src/main/resources/
 │   ├── V2__create_app_user.sql
 │   └── V3__add_version_to_employee.sql
 ├── db/dev/                       確認用データ（開発でしか読まない）
-│   └── V900__insert_sample_data.sql
+│   ├── V900__insert_sample_data.sql
+│   └── V901__change_dev_passwords.sql
 ├── templates/
 │   ├── fragments/layout.html     共通ヘッダ
 │   ├── login.html
@@ -383,6 +384,12 @@ https://github.com/spring-projects/spring-boot/issues/43051
 Spring Security は権限不足のときフォワードで飛ばすので、
 元がPOSTならその画面にもPOSTで届く。`@RequestMapping` にする。
 URL直打ち（GET）では正しく403が出るので、見落としやすい。
+
+**開発用パスワードにChromeが警告を出した**
+`admin12345` / `viewer12345` は実際に流出したパスワードの一覧に載っており、
+ログインのたびに Chrome が「データ侵害で検出されました」と警告した。
+手元だけで動くアプリなので実害は無いが、画面を見せる場面で邪魔になる。
+**V900を書き換えず、V901を足して更新した**（適用済みのマイグレーションは編集しない）。
 
 **内容が同じ更新では版数が上がらない**
 Hibernateは変更が無ければUPDATE文を出さないので `@Version` も増えない。

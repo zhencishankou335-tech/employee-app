@@ -39,7 +39,7 @@ class LoginPageDevProfileTest {
     @DisplayName("devプロファイルなら、手元で試せるよう開発用のID・パスワードを表示する")
     void devCredentialsAreShownInDev() throws Exception {
         mockMvc.perform(get("/login"))
-                .andExpect(content().string(containsString("admin12345")))
-                .andExpect(content().string(containsString("viewer12345")));
+                .andExpect(content().string(containsString("meibo-admin-2026!")))
+                .andExpect(content().string(containsString("meibo-viewer-2026!")));
     }
 }
