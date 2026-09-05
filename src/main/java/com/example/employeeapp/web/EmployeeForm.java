@@ -25,6 +25,15 @@ public class EmployeeForm {
     /** 更新時のみ値が入る。新規のときは null */
     private Long id;
 
+    /**
+     * 版数（排他制御用）。編集画面の hidden 項目として往復する。
+     *
+     * 「この画面を開いたとき、データは第何版だったか」を持ち帰るためのもの。
+     * 保存時にDBの現在の版数と突き合わせて、他の人が先に更新していないかを判定する。
+     * 利用者が入力するものではないので、入力チェックの対象にはしない。
+     */
+    private Long version;
+
     @NotBlank(message = "社員番号を入力してください")
     @Pattern(regexp = "^[A-Z][0-9]{4}$", message = "社員番号は英大文字1字＋数字4桁で入力してください（例：E0001）")
     private String employeeNumber;
@@ -66,6 +75,14 @@ public class EmployeeForm {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     public String getEmployeeNumber() {

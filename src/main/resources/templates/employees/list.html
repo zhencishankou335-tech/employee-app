@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,19 +9,17 @@
 </head>
 <body>
 
-<header class="app-header">
-  <span class="app-title">社員名簿</span>
-  <nav class="app-nav">
-    <a th:href="@{/employees}">社員一覧</a>
-    <a th:href="@{/employees/summary}">部署別人数</a>
-  </nav>
-</header>
+<!-- ヘッダ帯（ログイン中の利用者名・ログアウトを含む）は fragments/layout.html に共通化 -->
+<header th:replace="~{fragments/layout :: appHeader}"></header>
 
 <main class="app-main">
 
   <div class="page-head">
     <h1 class="page-title">社員一覧</h1>
-    <a class="btn btn-primary" th:href="@{/employees/new}">新規登録</a>
+    <!-- 閲覧のみの利用者にはボタンを出さない。ただしこれは見た目の親切であって、
+         実際に止めているのは SecurityConfig（サーバ側）。両方書く。 -->
+    <a class="btn btn-primary" sec:authorize="hasRole('ADMIN')"
+       th:href="@{/employees/new}">新規登録</a>
   </div>
 
   <!-- 登録・更新・削除のあとに1回だけ出るメッセージ -->
@@ -81,7 +80,7 @@
       <th scope="col">メールアドレス</th>
       <th scope="col">入社日</th>
       <th scope="col">在籍区分</th>
-      <th scope="col">操作</th>
+      <th scope="col" sec:authorize="hasRole('ADMIN')">操作</th>
     </tr>
     </thead>
     <tbody>
@@ -100,7 +99,7 @@
               th:classappend="'status-' + ${e.status.name().toLowerCase()}"
               th:text="${e.status.label}">在籍</span>
       </td>
-      <td class="row-actions">
+      <td class="row-actions" sec:authorize="hasRole('ADMIN')">
         <a class="btn btn-small" th:href="@{/employees/{id}/edit(id=${e.id})}">編集</a>
 
         <form method="post" th:action="@{/employees/{id}/retire(id=${e.id})}"

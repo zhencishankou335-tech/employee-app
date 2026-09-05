@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!--
+  画面の共通部品。
+
+  ログイン機能を入れたことで、ヘッダ帯に「ログイン中の利用者名・権限・ログアウト」が
+  加わった。同じ内容を4つの画面にコピーすると、次に項目が増えたときに
+  1か所だけ直し忘れて表示がずれる。共通部分はここに1つだけ置く。
+
+  使う側:
+    <header th:replace="~{fragments/layout :: appHeader}"></header>
+-->
+<html lang="ja" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<header th:fragment="appHeader" class="app-header">
+  <span class="app-title">社員名簿</span>
+
+  <nav class="app-nav">
+    <a th:href="@{/employees}">社員一覧</a>
+    <a th:href="@{/employees/summary}">部署別人数</a>
+  </nav>
+
+  <!--
+    ログイン中の人の情報。
+    「誰として操作しているか」が常に見えていないと、
+    共用端末で別の人のアカウントのまま登録してしまう事故が起きる。
+  -->
+  <div class="app-user" th:if="${loginUserName != null}">
+    <span class="app-user-name" th:text="${loginUserName}">管理者 太郎</span>
+    <span class="app-user-role" th:if="${loginUserRole != null}"
+          th:text="${loginUserRole}">管理者</span>
+
+    <!--
+      ログアウトはGETではなくPOSTにする。
+      GETにすると、外部サイトに置かれた画像タグ1つで勝手にログアウトさせられる。
+      th:action を使っているので、CSRFトークンが自動で埋め込まれる。
+    -->
+    <form method="post" th:action="@{/logout}">
+      <button type="submit" class="btn-logout">ログアウト</button>
+    </form>
+  </div>
+</header>
+
+</body>
+</html>

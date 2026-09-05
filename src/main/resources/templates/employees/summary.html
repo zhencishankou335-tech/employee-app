@@ -8,13 +8,8 @@
 </head>
 <body>
 
-<header class="app-header">
-  <span class="app-title">社員名簿</span>
-  <nav class="app-nav">
-    <a th:href="@{/employees}">社員一覧</a>
-    <a th:href="@{/employees/summary}">部署別人数</a>
-  </nav>
-</header>
+<!-- ヘッダ帯（ログイン中の利用者名・ログアウトを含む）は fragments/layout.html に共通化 -->
+<header th:replace="~{fragments/layout :: appHeader}"></header>
 
 <main class="app-main">
 

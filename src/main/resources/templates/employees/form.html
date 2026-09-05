@@ -8,13 +8,8 @@
 </head>
 <body>
 
-<header class="app-header">
-  <span class="app-title">社員名簿</span>
-  <nav class="app-nav">
-    <a th:href="@{/employees}">社員一覧</a>
-    <a th:href="@{/employees/summary}">部署別人数</a>
-  </nav>
-</header>
+<!-- ヘッダ帯（ログイン中の利用者名・ログアウトを含む）は fragments/layout.html に共通化 -->
+<header th:replace="~{fragments/layout :: appHeader}"></header>
 
 <main class="app-main">
 
@@ -28,12 +23,28 @@
   </div>
 
   <!--
+    排他制御にかかったとき。
+    編集画面を開いている間に他の人が同じ社員を更新していた場合に出る。
+    このとき画面には「読み直した最新の内容」が入っている。
+  -->
+  <div class="error-summary" th:if="${conflictMessage}">
+    <p th:text="${conflictMessage}">他の利用者が先に更新しています</p>
+  </div>
+
+  <!--
     th:action は、新規なら POST /employees、編集なら POST /employees/{id} に切り替わる。
     th:object を指定すると、以下の項目で *{name} のように短く書ける。
   -->
   <form class="entry-form" method="post"
         th:action="${editing} ? @{/employees/{id}(id=${employeeId})} : @{/employees}"
         th:object="${employeeForm}">
+
+    <!--
+      排他制御用の版数。利用者には見えないが、画面と一緒に往復する。
+      「この画面を開いたとき、データは第何版だったか」を保存時に持ち帰るためのもの。
+      新規登録のときは空。
+    -->
+    <input type="hidden" th:field="*{version}">
 
     <div class="field">
       <label for="employeeNumber">社員番号 <span class="required">必須</span></label>

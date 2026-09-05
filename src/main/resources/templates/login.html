@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ログイン | 社員名簿</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+
+<!--
+  ログイン画面はまだ誰も認証していない人が見る画面なので、
+  他の画面にある .app-header（社員一覧・部署別人数のナビゲーション）は出さない。
+  ナビゲーションを出しても押せる意味がないため。
+-->
+<main class="login-page">
+  <div class="login-card">
+
+    <p class="login-system-name">社員名簿</p>
+    <h1 class="login-title">ログイン</h1>
+
+    <!-- ID・パスワードが一致しなかったとき。Spring Security が /login?error を付けて戻す -->
+    <div class="login-error" th:if="${param.error}">
+      <p>ログインIDまたはパスワードが正しくありません。</p>
+    </div>
+
+    <!-- ログアウト直後。Spring Security が /login?logout を付けて戻す -->
+    <div class="login-flash" th:if="${param.logout}">
+      <p>ログアウトしました。</p>
+    </div>
+
+    <!--
+      th:action を使うことで CSRF トークンの <input type="hidden"> が自動で埋め込まれる。
+      name="username" / name="password" は Spring Security のフォームログインが
+      既定で読みにいく項目名なので、この名前のまま変更しない。
+    -->
+    <form class="login-form" method="post" th:action="@{/login}">
+
+      <div class="field">
+        <label for="username">ログインID</label>
+        <input type="text" id="username" name="username"
+               autocomplete="username" required>
+      </div>
+
+      <div class="field">
+        <label for="password">パスワード</label>
+        <input type="password" id="password" name="password"
+               autocomplete="current-password" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary login-submit">ログイン</button>
+
+    </form>
+
+    <!--
+      ============================================================
+      開発用ログイン情報。
+      dev プロファイルのときだけ表示する（showDevCredentials は LoginController が渡す）。
+      「本番前に手で削除する」運用にすると必ず消し忘れるので、設定で自動的に消えるようにしている。
+      ============================================================
+    -->
+    <div class="login-dev-note" th:if="${showDevCredentials}">
+      <p>開発用アカウント（本番では削除）</p>
+      <ul>
+        <li>管理者：<span class="login-dev-cred">admin / admin12345</span></li>
+        <li>閲覧のみ：<span class="login-dev-cred">viewer / viewer12345</span></li>
+      </ul>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

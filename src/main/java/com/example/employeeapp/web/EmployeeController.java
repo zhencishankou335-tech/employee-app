@@ -6,6 +6,7 @@ import com.example.employeeapp.domain.EmploymentStatus;
 import com.example.employeeapp.service.DepartmentSummary;
 import com.example.employeeapp.service.DuplicateEmployeeNumberException;
 import com.example.employeeapp.service.EmployeeService;
+import com.example.employeeapp.service.StaleEmployeeException;
 import jakarta.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
@@ -170,6 +171,20 @@ public class EmployeeController {
             model.addAttribute("editing", true);
             model.addAttribute("employeeId", id);
             return "employees/form";
+        } catch (StaleEmployeeException e) {
+            /*
+             * 編集画面を開いている間に、他の人が同じ社員を更新していた場合。
+             *
+             * 入力内容をそのまま残すと、利用者は自分の入力を保存できたと錯覚しやすい。
+             * ここでは最新の内容を読み直して画面に出し、
+             * 「今こうなっている。この上で直すかどうか決めてください」という形にする。
+             * どちらを採用するかをシステムが勝手に決めない。
+             */
+            model.addAttribute("employeeForm", toForm(service.findById(id)));
+            model.addAttribute("conflictMessage", e.getMessage());
+            model.addAttribute("editing", true);
+            model.addAttribute("employeeId", id);
+            return "employees/form";
         }
 
         return "redirect:/employees";
@@ -258,6 +273,8 @@ public class EmployeeController {
         form.setHireDate(e.getHireDate());
         form.setStatus(e.getStatus());
         form.setNote(e.getNote());
+        // 排他制御用。画面の hidden 項目として往復させる
+        form.setVersion(e.getVersion());
         return form;
     }
 }

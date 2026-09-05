@@ -964,3 +964,236 @@ textarea:disabled {
     color: #000000;
   }
 }
+
+/* ==========================================================================
+   17. ログイン画面（.login-page / .login-card / .login-form 他）
+   Spring Security のフォームログイン用。まだ誰もログインしていない人が見る画面
+   なので、.app-header は出さない。1枚のカードを画面中央に置くだけの構成。
+   新しい色は使わず、既存トークンの組み合わせだけで作っている。
+   ========================================================================== */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-5) var(--sp-4);
+}
+
+.login-card {
+  width: 100%;
+  /* 380px は新しい値。--w-form(640px) だと項目が2つしかないログインには広すぎ、
+     視線の横移動が増える。カードとして収まりのよい幅として決め打ちしている。 */
+  max-width: 380px;
+  padding: var(--sp-5) var(--sp-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+}
+
+.login-system-name {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fz-lg);
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-align: center;
+  color: var(--c-text);
+}
+
+.login-title {
+  /* 4章 .page-head と同じ「見出し＋下罫線」を、中央寄せに直して流用している */
+  margin: 0 0 var(--sp-5);
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--c-border);
+  font-size: var(--fz-base);
+  font-weight: 600;
+  text-align: center;
+  color: var(--c-text-weak);
+}
+
+/* 5章 .flash / 6章 .error-summary と同じ色・形。カード幅に収まるよう
+   max-width だけを外し、左右の余白をカードのパディングに任せている。 */
+.login-error,
+.login-flash {
+  margin: 0 0 var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+  font-size: var(--fz-sm);
+}
+
+.login-error {
+  background: var(--c-err-bg);
+  border: 1px solid var(--c-err-border);
+  border-left: 3px solid var(--c-err-text);
+  color: var(--c-err-text);
+}
+
+.login-flash {
+  background: var(--c-ok-bg);
+  border: 1px solid var(--c-ok-border);
+  border-left: 3px solid var(--c-ok-text);
+  color: var(--c-ok-text);
+}
+
+.login-error p,
+.login-flash p { margin: 0; }
+
+/* 12章 .entry-form の「1項目1行」をそのまま踏襲。.field 自体の定義は7章にある */
+.login-form .field { margin-bottom: var(--sp-4); }
+
+.login-form .field label {
+  font-size: var(--fz-sm);
+  color: var(--c-text);
+}
+
+.login-submit {
+  width: 100%;
+  margin-top: var(--sp-1);
+}
+
+/* 開発用ログイン情報。本番では丸ごと削除する前提のブロックだと分かるよう、
+   罫線を破線にして「一時的な表示」であることを視覚的にも示している。 */
+.login-dev-note {
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-3);
+  border-top: 1px dashed var(--c-border);
+  font-size: var(--fz-xs);
+  color: var(--c-text-weak);
+}
+
+.login-dev-note p {
+  margin: 0 0 var(--sp-1);
+  font-weight: 600;
+}
+
+.login-dev-note ul {
+  margin: 0;
+  padding-left: var(--sp-4);
+  list-style: disc;
+}
+
+.login-dev-note li + li { margin-top: var(--sp-1); }
+
+.login-dev-cred {
+  font-family: var(--ff-num);
+  color: var(--c-text);
+}
+
+/* --------------------------------------------------------------------------
+   17-1. password 型の入力欄
+   2章の入力部品セレクタ一覧（input[type="text"] など）には password が
+   含まれていない（このアプリに今までパスワード欄が無かったため）。
+   既存のセレクタ一覧は変更せず、同じ見た目をここで補っている。
+   -------------------------------------------------------------------------- */
+input[type="password"] {
+  width: 100%;
+  height: var(--h-control);
+  padding: 0 var(--sp-2);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  color: var(--c-text);
+  font-family: inherit;
+  font-size: var(--fz-base);
+  line-height: normal;
+}
+
+input[type="password"]:focus { border-color: var(--c-accent); }
+
+input[type="password"]:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 0;
+  box-shadow: none;
+}
+
+input[type="password"]:disabled {
+  background: #f2f4f6;
+  color: var(--c-text-weak);
+}
+
+/* ==========================================================================
+   18. ヘッダ内・ログイン中ユーザー表示（.app-user / .app-user-name / .app-user-role / .btn-logout）
+   fragments/layout.html :: appHeader で使う。3章の .app-header は
+   display:flex なので、.app-user 自身に margin-left:auto を持たせるだけで
+   右端に寄る。.app-header / .app-nav の既存定義には一切触れていない。
+   ========================================================================== */
+.app-user {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-left: auto;
+}
+
+/* ログアウトの<form>が既定のブロック余白を持つと --h-header(44px) の帯が
+   縦に伸びてしまうため、ここで打ち消す */
+.app-user form { margin: 0; }
+
+.app-user-name {
+  font-size: var(--fz-sm);
+  color: var(--c-text-invert); /* 白 / ヘッダ帯(#333d4a) ＝ 約 11:1（3章コメントの実測を継承） */
+  white-space: nowrap;
+}
+
+/* 10章 .status-active と同じ配色。権限を示す小さなバッジとして流用している */
+.app-user-role {
+  display: inline-block;
+  padding: 1px var(--sp-2);
+  background: var(--c-accent-weak);
+  border: 1px solid #b6cde5; /* 10章 .status-active と同じ枠色（新規値ではない） */
+  border-radius: var(--radius);
+  color: var(--c-accent);    /* c-accent / c-accent-weak ＝ 約 6.7:1。AA(4.5:1)を満たす */
+  font-size: var(--fz-xs);
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+/* 濃いヘッダ帯の上に載る、白文字＋枠線のみの控えめなボタン。
+   .btn は背景が白地前提（13章）のためベースにせず、ここで独立に定義している。 */
+.btn-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  padding: 0 var(--sp-2);
+  background: transparent;
+  /* 不透明度 .6 は新しい値。枠線だけの控えめなボタンなので、白ベタ100%だと
+     浮きすぎ、.14（下の hover と同じ値、13行下に既存例あり）だと薄すぎて
+     境界が見えない。中間として決め打ちしている（枠は文字ではないためAA
+     の4.5:1は適用対象外。背景との合成後もはっきり判別できる明度差がある）。 */
+  border: 1px solid rgba(255, 255, 255, .6);
+  border-radius: var(--radius);
+  color: var(--c-text-invert); /* 白 / ヘッダ帯 ＝ 約 11:1（3章と同じ実測値） */
+  font-family: inherit;
+  font-size: var(--fz-xs);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .1s linear, border-color .1s linear;
+}
+
+.btn-logout:hover,
+.btn-logout:active {
+  background: rgba(255, 255, 255, .14); /* 3章 .app-nav a:hover と同じ値に揃える */
+  border-color: rgba(255, 255, 255, .85);
+}
+
+.btn-logout:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 1px;
+  box-shadow: none; /* 3章 .app-nav a:focus-visible と同じ扱い。濃い帯の上は白線のみで十分 */
+}
+
+/* --------------------------------------------------------------------------
+   19. 狭い画面での追加調整（ログイン画面・ヘッダのユーザー表示）
+   14章の 1100px / 720px とは別に、今回の追加分に対してだけ 600px を設ける
+   （指定された基準がこの2つの新規パーツにだけ関わるため）。
+   -------------------------------------------------------------------------- */
+@media (max-width: 600px) {
+  .login-page { padding: var(--sp-4) var(--sp-3); }
+  .login-card { padding: var(--sp-4) var(--sp-3); }
+
+  /* 氏名まで出すと折り返してヘッダの高さ(--h-header)が崩れるため、
+     役割バッジとログアウトだけを残す */
+  .app-user-name { display: none; }
+  .app-user { gap: var(--sp-2); }
+}

@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -63,13 +64,29 @@ public class Employee {
     /**
      * 登録日時・更新日時。
      * 業務系では「いつ誰が触ったか」を残すのがほぼ必須。
-     * 本来は更新者IDも持つが、今回はログイン機能が無いので日時のみ。
+     * 更新者IDまでは今回持たせていない（README の「入れていないもの」に記載）。
      */
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    /**
+     * 版数（楽観ロック用）。
+     *
+     * @Version を付けると、Hibernate が UPDATE 文に
+     *   where id = ? and version = ?
+     * を自動で足し、成功したら version を +1 する。
+     * 他の人が先に更新していれば version が変わっているので、
+     * 更新対象が0件になり ObjectOptimisticLockingFailureException が投げられる。
+     *
+     * 「先に保存した人の変更が、後から保存した人に黙って上書きされる」事故を防ぐための仕組み。
+     * 値はアプリが触らない。Hibernate が管理する。
+     */
+    @Version
+    @Column(nullable = false)
+    private Long version;
 
     /** INSERT の直前に自動で呼ばれる */
     @PrePersist
@@ -165,5 +182,17 @@ public class Employee {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    /**
+     * 画面から戻ってきた版数を戻すためだけに使う。
+     * 通常の業務処理からは呼ばない（値は Hibernate が管理する）。
+     */
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

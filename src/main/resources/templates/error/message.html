@@ -8,13 +8,8 @@
 </head>
 <body>
 
-<header class="app-header">
-  <span class="app-title">社員名簿</span>
-  <nav class="app-nav">
-    <a th:href="@{/employees}">社員一覧</a>
-    <a th:href="@{/employees/summary}">部署別人数</a>
-  </nav>
-</header>
+<!-- ヘッダ帯（ログイン中の利用者名・ログアウトを含む）は fragments/layout.html に共通化 -->
+<header th:replace="~{fragments/layout :: appHeader}"></header>
 
 <main class="app-main">
 
@@ -26,7 +21,8 @@
     <p th:text="${errorDetail}">対象のデータがありません</p>
   </div>
 
-  <p>URLが間違っているか、他の担当者が既に削除した可能性があります。</p>
+  <!-- 補足の一文は呼び出し側が渡す。404と403で書くべき内容が違うため -->
+  <p th:if="${errorHint}" th:text="${errorHint}">補足</p>
 
   <div class="form-actions">
     <a class="btn btn-primary" th:href="@{/employees}">社員一覧に戻る</a>

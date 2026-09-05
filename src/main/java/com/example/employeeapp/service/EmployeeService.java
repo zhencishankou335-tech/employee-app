@@ -106,10 +106,29 @@ public class EmployeeService {
      * 更新。
      * 社員番号を他人のものに変更しようとしていないかを確認する。
      * 「自分自身と同じ番号」は当然OKなので、そこを除外して判定する。
+     *
+     * あわせて排他制御（楽観ロック）の判定もここでやる。
      */
     @Transactional
     public Employee update(Long id, EmployeeForm form) {
         Employee employee = findById(id);
+
+        /*
+         * 排他制御：画面を開いたときの版数と、今DBにある版数を突き合わせる。
+         *
+         * 食い違っていれば、編集画面を開いている間に誰かが保存したということ。
+         * そのまま上書きすると相手の変更が消えるので、ここで止める。
+         *
+         * エンティティ側の @Version による検知（DBのUPDATE時に効く）もあるが、
+         * それだけだと「同時刻に処理が重なったとき」しか捕まえられない。
+         * 画面を開きっぱなしにして10分後に保存、という業務でよくある操作は
+         * こちらの明示的な比較でないと検知できない。
+         *
+         * 社員番号の重複チェックを「アプリ側とDB側の両方」でやっているのと同じ考え方。
+         */
+        if (form.getVersion() == null || !form.getVersion().equals(employee.getVersion())) {
+            throw new StaleEmployeeException(employee.getName());
+        }
 
         Optional<Employee> sameNumber = repository.findByEmployeeNumber(form.getEmployeeNumber());
         if (sameNumber.isPresent() && !sameNumber.get().getId().equals(id)) {

@@ -51,6 +51,26 @@
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 
+		<!-- ログイン機能。認証・認可・CSRF対策・パスワードのハッシュ化がまとめて入る -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<!-- 画面（Thymeleaf）で「ログイン中の人の名前」「管理者だけボタンを出す」を書けるようにする -->
+		<dependency>
+			<groupId>org.thymeleaf.extras</groupId>
+			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
+		</dependency>
+		<!--
+			DBマイグレーション管理。テーブル定義の変更履歴をSQLファイルとして残す。
+			flyway-core だけを入れても Spring Boot 4 では自動設定が有効にならない
+			（起動しても Flyway のログが1行も出ない）。starter を使う。
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -80,6 +100,18 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- テストで「管理者としてログインした状態」を作るために使う -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- テストでもマイグレーションを実行し、SQLの間違いをテストで検知する -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
